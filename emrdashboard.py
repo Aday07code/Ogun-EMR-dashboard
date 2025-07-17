@@ -9,7 +9,7 @@ st.title("📊 Ogun EMR Weekly Facility Dashboard")
 # Load Excel data directly (no uploader)
 @st.cache_data
 def load_data():
-    return pd.read_excel("EMR_NDR CONC_120725.xlsx", sheet_name="Conc", engine="openpyxl")
+    return pd.read_excel("EMRDashboard.xlsx", sheet_name="Conc", engine="openpyxl")
 
 # Load the data
 try:
