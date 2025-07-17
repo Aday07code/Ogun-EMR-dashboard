@@ -6,33 +6,36 @@ import plotly.express as px
 st.set_page_config(page_title="EMR Dashboard", layout="wide")
 st.title("📊 Ogun EMR Weekly Facility Dashboard")
 
-# Upload file
-uploaded_file = st.file_uploader("📤 Upload your Excel file", type=["xlsx"])
+# Load Excel data directly (no uploader)
+@st.cache_data
+def load_data():
+    return pd.read_excel("EMR_NDR CONC_120725.xlsx", sheet_name="Conc", engine="openpyxl")
 
-if uploaded_file:
-    df = pd.read_excel(uploaded_file, sheet_name="Conc", engine="openpyxl")
+# Load the data
+try:
+    df = load_data()
     df = df.dropna(subset=['FacilityName'])
 
     # Sidebar filters
     with st.sidebar:
         st.header("📌 Filters")
 
-    # State filter
-    state_options = df['State'].dropna().unique()
-    states = st.multiselect("State(s)", state_options)
+        # State filter
+        state_options = df['State'].dropna().unique()
+        states = st.multiselect("State(s)", state_options)
 
-    # Apply state filter to get LGA options
-    df_lga = df[df['State'].isin(states)] if states else df.copy()
-    lga_options = df_lga['LGA'].dropna().unique()
-    lgas = st.multiselect("LGA(s)", lga_options)
+        # Apply state filter to get LGA options
+        df_lga = df[df['State'].isin(states)] if states else df.copy()
+        lga_options = df_lga['LGA'].dropna().unique()
+        lgas = st.multiselect("LGA(s)", lga_options)
 
-    # Apply LGA filter to get Facility options
-    df_fac = df_lga[df_lga['LGA'].isin(lgas)] if lgas else df_lga.copy()
-    fac_options = df_fac['FacilityName'].dropna().unique()
-    facilities = st.multiselect("Facility(s)", fac_options)
+        # Apply LGA filter to get Facility options
+        df_fac = df_lga[df_lga['LGA'].isin(lgas)] if lgas else df_lga.copy()
+        fac_options = df_fac['FacilityName'].dropna().unique()
+        facilities = st.multiselect("Facility(s)", fac_options)
 
-    # Apply button
-    apply_filter = st.button("✅ Apply Filters")
+        # Apply Filters Button
+        apply_filter = st.button("✅ Apply Filters")
 
     # Wait for user to click "Apply Filters"
     if apply_filter:
@@ -113,12 +116,12 @@ if uploaded_file:
         def convert_df(df):
             return df.to_csv(index=False).encode('utf-8')
 
-        st.download_button("📥 Download Filtered Data as CSV",
+        st.download_button("📅 Download Filtered Data as CSV",
                            data=convert_df(filtered_df),
                            file_name="filtered_data.csv",
                            mime="text/csv")
     else:
         st.info("👈 Select your filters and click '✅ Apply Filters' to load dashboard.")
 
-else:
-    st.warning("⚠️ Please upload an Excel file with a sheet named 'Conc'.")
+except FileNotFoundError:
+    st.error("⚠️ The data file was not found. Please make sure 'data/emr_dashboard.xlsx' exists.")
